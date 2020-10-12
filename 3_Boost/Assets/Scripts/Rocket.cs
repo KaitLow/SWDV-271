@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour
@@ -12,6 +13,9 @@ public class Rocket : MonoBehaviour
     [SerializeField] ParticleSystem deathParticles;
     [SerializeField] ParticleSystem successParticles;
     [SerializeField] float levelLoadDelay = 3f;
+
+    bool collisionDisabled = false;
+
 
     enum State { Alive, Dying, Transcending };
     State state = State.Alive;
@@ -31,6 +35,23 @@ public class Rocket : MonoBehaviour
         {
             RespondToRotateInput();
             RespondToThrustInput();
+        }
+        
+        //if(Debug.isDebugBuild)
+        {
+            RespondToDebugInput();
+        }
+    }
+
+    private void RespondToDebugInput()
+    {
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextLevel();
+        }
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            collisionDisabled = !collisionDisabled;
         }
     }
 
@@ -79,7 +100,7 @@ public class Rocket : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if (state != State.Alive) { return; }
+        if (state != State.Alive || collisionDisabled) { return; }
         switch (collision.gameObject.tag)
         {
             case "Friendly":
@@ -124,6 +145,15 @@ public class Rocket : MonoBehaviour
     private void LoadNextLevel()
     {
         state = State.Alive;
-        SceneManager.LoadScene(1);
+        int currentScenceIndex = SceneManager.GetActiveScene().buildIndex;
+        int nextSceneIndex = currentScenceIndex + 1;
+        print("SceneCount " + SceneManager.sceneCountInBuildSettings);
+        print("Current Scene Index " + currentScenceIndex);
+        if (nextSceneIndex == SceneManager.sceneCountInBuildSettings)
+        {
+          nextSceneIndex = 0;
+        }
+        print("Next Scene Index " + nextSceneIndex);
+        SceneManager.LoadScene(nextSceneIndex);
     }
 }
